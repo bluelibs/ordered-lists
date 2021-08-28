@@ -4,6 +4,8 @@ The application of these ordered lists (which work with any data type) which are
 
 For example, you have an event, and to that event you attach certain handlers with a certain priority. Each event will hold its very own `OrderedList` of handlers so it knows exactly how to call them.
 
+Play around: https://codesandbox.io/s/ordered-lists-demo-f9pe3?file=/src/index.ts
+
 ## Install
 
 ```bash
