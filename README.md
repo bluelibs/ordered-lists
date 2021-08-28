@@ -1,26 +1,69 @@
-<h1 align="center">BlueLibs template</h1>
+# Append-Only Performance-focused Ordered Lists
 
-<p align="center">
-  <a href="https://travis-ci.org/bluelibs/template">
-    <img src="https://api.travis-ci.org/bluelibs/template.svg?branch=master" />
-  </a>
-  <a href="https://coveralls.io/github/bluelibs/template?branch=main">
-    <img src="https://coveralls.io/repos/github/bluelibs/template/badge.svg?branch=main" />
-  </a>
-</p>
+The application of these ordered lists (which work with any data type) which are suited when you have event-chains or functional chains that support injecting additional handlers to it in a specific order.
 
-This is the X-Framework of handling password authentication blended with GraphQL.
+For example, you have an event, and to that event you attach certain handlers with a certain priority. Each event will hold its very own `OrderedList` of handlers so it knows exactly how to call them.
 
 ## Install
 
 ```bash
-npm install --save @bluelibs/template
+npm i -S @bluelibs/ordered-lists
 ```
 
-## [Documentation](./DOCUMENTATION.md)
+## Benchmarks
 
-[Click here to go to the documentation](./DOCUMENTATION.md)
+```ts
+npm run benchmark
+```
 
-## Support
+The result for 1M records and `1000` orders tested on `M1` CPU:
 
-This package is part of [BlueLibs](https://www.bluelibs.com) family. If you enjoy this work please show your support by starring [the main package](https://github.com/bluelibs/bluelibs). If not, let us know what can we do to deserve it, [our feedback form is here](https://forms.gle/DTMg5Urgqey9QqLFA)
+```
+Time elapsed for setting up the list: 28ms
+Time elapsed getting sorted elements: 72ms for ordering.
+```
+
+## Documentation
+
+The `OrderedListCollection` is as performant having very little overhead over each individual collection sort.
+
+The `OrderedList` is append-only and has two main ways of interraction `add()` and `elements()`:
+
+```ts
+import { OrderedList, OrderedListCollection } from "@bluelibs/ordered-lists";
+
+const orderedList = new OrderedList<string>();
+
+orderedList.add("Hello", 1);
+orderedList.add("world!", 2);
+
+orderedList.elements().join(" "); // Hello world!
+```
+
+Typically `orderedList` are a sort-of "compile-time" built-up, as you construct your application logic. This means that after the initial configurations, you will no longer "add" to them. The solution is to `lock()` them so `elements()` get stored into memory in an ordered fashion and accessing it is instant.
+
+```ts
+orderedList.lock();
+orderedList.elements(); // instantly
+```
+
+You can hook and watch when elements get added:
+
+```ts
+orderedList.onAdd((element, order) => {
+  // Do something
+});
+```
+
+The `OrderedListCollection` is responsible of getting your data from multiple ordered lists:
+
+```ts
+const orderedList1 = new OrderedList<string>();
+const orderedList2 = new OrderedList<string>();
+
+const collection = new OrderedListCollection([orderedList1, orderedList2]);
+
+collection.elements(); // Get all the elements ordered from both lists with their orders properly merged
+
+collection.lock(); // This would store all elements() into memory and will no longer react to changes.
+```
